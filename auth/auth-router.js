@@ -21,6 +21,7 @@ router.post("/login", async (req, res, next) => {
         
         const passwordValid = await bcrypt.compare(password, user.password)
         if (user && passwordValid) {
+            req.session.user = user; //send cookie with this user information.
 
             return res.status(200).json({ message: `Welcome ${user.username}!`, })
         }
@@ -28,5 +29,19 @@ router.post("/login", async (req, res, next) => {
         next()
     }
 })
+
+router.get("/logout",  (req, res) => {
+    if(req.session) {
+        req.session.destroy(err => {
+            if(err) {
+                return res.json({ message: "Can not logout."})
+            } else {
+                return res.status(200).json({ message: "Logout successful." })
+            }
+        })
+    } else {
+        return res.status(200).json({ message: "The End." }) //if there is no session to begin with.
+    }
+}) 
 
 module.exports = router
