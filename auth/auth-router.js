@@ -1,6 +1,7 @@
 const bcrypt = require("bcryptjs")
 const express = require("express")
 const userModel = require("../users/user-model")
+const restricted = require("../middleware/restricted")
 
 const router = express.Router()
 
@@ -24,24 +25,32 @@ router.post("/login", async (req, res, next) => {
             req.session.user = user; //send cookie with this user information.
 
             return res.status(200).json({ message: `Welcome ${user.username}!`, })
+        } else {
+            return res.status(401).json({ message: "Invalid credentials", })
         }
     } catch (err) {
-        next()
+        next(err)
     }
 })
 
-router.get("/logout",  (req, res) => {
-    if(req.session) {
-        req.session.destroy(err => {
-            if(err) {
-                return res.json({ message: "Can not logout."})
-            } else {
-                return res.status(200).json({ message: "Logout successful." })
-            }
-        })
-    } else {
-        return res.status(200).json({ message: "The End." }) //if there is no session to begin with.
+router.get("/protected", restricted(), async (req, res, next) => {
+    try {
+        return res.status(200).json({ message: "You are authorized", })
+
+    } catch (err) {
+        next(err)
     }
-}) 
+})
+
+router.get("/logout", restricted(), (req, res, next) => {
+    req.session.destroy((err) => {
+        if (err) {
+            next(err)
+        } else {
+            return res.status(200).json({ message: "Successfully logged out." })
+        }
+    })
+})
+
 
 module.exports = router
