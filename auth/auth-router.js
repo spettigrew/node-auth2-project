@@ -10,7 +10,7 @@ router.post("/register", async (req, res, next) => {
     const savedUser = await userModel.add(req.body)
     return res.status(201).json(savedUser)
     } catch (err) {
-        next()
+        next(err)
     }
 })
 
@@ -33,7 +33,7 @@ router.post("/login", async (req, res, next) => {
     }
 })
 
-router.get("/protected", restricted(), async (req, res, next) => {
+router.get("/protected", restricted, async (req, res, next) => {
     try {
         return res.status(200).json({ message: "You are authorized", })
 
@@ -42,7 +42,7 @@ router.get("/protected", restricted(), async (req, res, next) => {
     }
 })
 
-router.get("/logout", restricted(), (req, res, next) => {
+router.get("/logout", restricted, (req, res, next) => {
     req.session.destroy((err) => {
         if (err) {
             next(err)
